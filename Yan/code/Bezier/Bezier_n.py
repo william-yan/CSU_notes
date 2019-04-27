@@ -21,18 +21,20 @@ def bezier_n_curve(points, n, nTimes=1000):
         count = n - (nPoints - 1)%n
     print('count is : ',count)
     # insert Point
+    '''
     while(count):
-        points_insert = points[-1]
+        points_insert = points[-1]+(points[-1]-points[-2])*0.1*count
         points = np.insert(points,len(points),values=points_insert, axis=0)
         count = count - 1
-    
+    '''
     result = np.transpose(points);
     result_D = np.transpose(points);
+    D = [0]
     for i in range(0,len(points)-1,n):
         end_selesct = i+n+1
         Path_selct = points[i:end_selesct]
-        print("Path_selct before is : \n",Path_selct)
-
+        #print("Path_selct before is : \n",Path_selct)
+        '''
         if (i+n+2) < (len(points)):
             point_insert_front = (points[i] + points[i+1])/2
             point_insert_rear = (Path_selct[-1] + Path_selct[-2])/2
@@ -44,18 +46,6 @@ def bezier_n_curve(points, n, nTimes=1000):
             y2 = points[end_selesct][1]  
             
             point_insert_rear[1] = (y2-y1)/(x2-x1)*(x-x1) + y1
-            '''
-            print("x is :",x)
-            print("x1 is :",x1)
-            print("x2 is :",x2)
-            print("y is :",point_insert_rear[1])
-            print("y1 is :",y1)
-            print("y2 is :",y2)
-            plt.figure(1)
-            plt.plot(x,point_insert_rear[1],'ko')
-            plt.plot(x1,y1,'go')
-            plt.plot(x2,y2,'bo')
-            '''
             Path_selct = np.insert(Path_selct,1,values=point_insert_front, axis=0)
             Path_selct = np.insert(Path_selct,-1,values=point_insert_rear, axis=0)
 
@@ -64,38 +54,33 @@ def bezier_n_curve(points, n, nTimes=1000):
             point_insert_rear = (Path_selct[-1] + Path_selct[-2])/2
             Path_selct = np.insert(Path_selct,1,values=point_insert_front, axis=0)
             Path_selct = np.insert(Path_selct,-1,values=point_insert_rear, axis=0)
-        print("point_insert_front  is : \n",point_insert_front)
-        print("point_insert_rear   is : \n",point_insert_rear)
-        print("Path_selct after is : \n",Path_selct)
+        '''     
+        
         tempresult = Bezier.bezier_curve(Path_selct,nTimes)
-        result = np.c_[result,tempresult]
-        # Derivative n-1 order Bezier curve
-        Path_select_D = Path_selct[1:] - Path_selct[:-1]
-        tempresult_D = Bezier.bezier_curve(Path_select_D,nTimes)
-        result_D = np.c_[result_D,tempresult_D]   
+        tempresult_D1 = np.array([Bezier.bezier_curve(Path_selct[:-2],nTimes)])
+        tempresult_D2 = np.array([Bezier.bezier_curve(Path_selct[1:],nTimes)])
         
-        #plt.figure(1)
-        #plt.plot(Path_selct[-2][0],Path_selct[-2][1],'ko')
-        #plt.plot(Path_selct[-1][0],Path_selct[-1][1],'go')
-        
+        tempresult_D = tempresult_D2 - tempresult_D1
+        print("tempresult_D.shape",tempresult_D.shape)
+        for i in range (100):
+            D.append(tempresult_D[0][1][i]/tempresult_D[0][1][i])
 
-    #plt.figure(1)
-    #plt.plot(Path_selct[0],Path_selct[1],'b.')
-    #plt.plot(result[0][len(points):-1],result[1][len(points):-1],'b.')
-    #print('result[0][len(points):-1]:\n',result[0][len(points):-1])
-    #print('result[1][len(points):-1]:\n',result[1][len(points):-1])
+        result = np.c_[result,tempresult]
+        result_D = np.append(result_D,tempresult_D)
+        print("Path_selct\n",Path_selct)
+        #print("Path_selct_D\n",Path_select_D)
 
     x_re = result[0][len(points):-1]
     y_re = result[1][len(points):-1]
-    x_re_D = result_D[0][len(points):-1]
-    y_re_D = result_D[1][len(points):-1]
-    print(result_D[0][len(points):-1])
-    print(result_D[1][len(points):-1])
-                 
-    return x_re,y_re,x_re_D,y_re_D
+    print("D is : \n",result_D)
+    plt.figure(2)
+    #D = np.array(bezierPoint[2])    
+    plt.plot(D[1:],'k.')    
+    print("x_re.shape",x_re.shape)
+    #print("D.shape",D.shape)
+    return x_re,y_re,D[1:]
         
-    # insert point
-    
+
 if __name__ == "__main__":
     a0 = 1
     a1 = 0.5
@@ -107,15 +92,24 @@ if __name__ == "__main__":
     
     Path = np.transpose(Path)   
 
-    n = 5
+    n = 10
     bezierPoint = bezier_n_curve(Path, n, 100)
     
     plt.figure(1)
     plt.plot(x,y,'ro')
     plt.axis("equal")
     plt.plot(bezierPoint[0],bezierPoint[1],'r.')
+    Path_D= np.array([bezierPoint[0]])
+
+    
+    Path_D = a1 + 2 * a2 * bezierPoint[0] + 3 * a3 *bezierPoint[0]**2
     plt.figure(2)
-    plt.plot(bezierPoint[0],bezierPoint[3],'r.')
+    #D = np.array(bezierPoint[2])
+    #print(bezierPoint[2])
+    #plt.plot(bezierPoint[0], D,'k.')
+    plt.plot(bezierPoint[0],Path_D,'r.')
+
+    
     
     
     
